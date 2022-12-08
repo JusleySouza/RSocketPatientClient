@@ -3,15 +3,19 @@ package com.ju.springboot.rsocket.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ju.springboot.rsocket.model.Claim;
 import com.ju.springboot.rsocket.model.ClinicalData;
 import com.ju.springboot.rsocket.model.Patient;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -35,6 +39,12 @@ public class RSocketPatientClientController {
 	public Mono<Void> fireAndForget( @RequestBody Patient patient){
 		logger.info("Patient Being Checked Out: "+ patient);
 		return rSocketRequester.route("patient-checkout").data(patient).retrieveMono(Void.class);
+	}
+	
+	@GetMapping("/request-stream")
+	public ResponseEntity<Flux<Claim>> requestStream(){
+		Flux<Claim> data = rSocketRequester.route("claim-stream").retrieveFlux(Claim.class);
+		return ResponseEntity.ok().contentType(MediaType.TEXT_EVENT_STREAM).body(data);
 	}
 
 }
